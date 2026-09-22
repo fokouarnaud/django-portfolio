@@ -204,6 +204,45 @@ dans `theme/static_src/src/styles.css` et relancer `tailwind build`.
     *Web*. Le site est alors accessible sur
     `https://<votre-compte>.pythonanywhere.com`.
 
+### Récapitulatif : commandes console (Bash PythonAnywhere)
+
+Toutes les commandes des étapes 2 à 6 ci-dessus, à saisir dans l'ordre dans
+une console Bash PythonAnywhere (onglet *Consoles* → *Bash*) — les étapes 7
+à 10 se font, elles, dans l'onglet *Web* (interface graphique, pas de
+console) :
+
+```bash
+# 2. Cloner le dépôt
+git clone https://github.com/fokouarnaud/django-portfolio.git
+cd django-portfolio
+
+# 3. Créer + activer le virtualenv, installer les dépendances de prod
+mkvirtualenv --python=python3.12 django-portfolio-env
+pip install -r requirements/prod.txt
+
+# 4. Variables d'environnement (adapter SECRET_KEY et <votre-compte>)
+cat > .env <<'EOF'
+SECRET_KEY=<générer une valeur, voir "Démarrage local" ci-dessus>
+DEBUG=False
+ALLOWED_HOSTS=<votre-compte>.pythonanywhere.com
+EOF
+
+# 5. Migrations + superutilisateur (commande interactive : suit des invites)
+python manage.py migrate
+python manage.py createsuperuser
+
+# 6. Fichiers statiques
+python manage.py collectstatic --noinput
+```
+
+Dans une console Bash rouverte plus tard, réactiver le venv avant toute
+commande `manage.py` :
+
+```bash
+workon django-portfolio-env
+cd django-portfolio
+```
+
 ### Mettre à jour un déploiement existant
 
 Depuis une console Bash, dans le dossier du projet et avec le venv activé
