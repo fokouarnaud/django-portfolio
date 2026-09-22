@@ -1,13 +1,13 @@
 {% load tailwind_tags %}
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="{{ site_settings.color_theme }}" data-font="{{ site_settings.font_theme }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Portfolio{% endblock %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Libre+Bodoni:wght@400;500;600;700&family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="{{ site_settings.google_fonts_url }}" rel="stylesheet">
     {% tailwind_css %}
 </head>
 <body class="min-h-screen flex flex-col bg-paper text-ink">

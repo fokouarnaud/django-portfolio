@@ -1,0 +1,12 @@
+# Normalise les fins de ligne en LF dans le dépôt, quel que soit l'OS de
+# l'auteur (Windows ici) — évite les avertissements CRLF/LF de Git et garantit
+# un comportement identique une fois déployé sur un serveur Linux (PythonAnywhere).
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary

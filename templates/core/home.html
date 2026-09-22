@@ -11,6 +11,22 @@
     </p>
 </section>
 
+{% if site_settings.youtube_embed_url %}
+<section class="mb-16">
+    <h2 class="font-display text-xl font-semibold mb-6">Présentation</h2>
+    <div class="relative w-full aspect-video rounded-lg overflow-hidden bg-muted">
+        <iframe
+            src="{{ site_settings.youtube_embed_url }}"
+            title="Vidéo de présentation"
+            class="absolute inset-0 w-full h-full"
+            loading="lazy"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen
+        ></iframe>
+    </div>
+</section>
+{% endif %}
+
 {% if projects %}
 <section>
     <h2 class="font-display text-xl font-semibold mb-6">Projets récents</h2>
