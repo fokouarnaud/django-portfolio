@@ -109,6 +109,18 @@ dans `theme/static_src/src/styles.css` et relancer `tailwind build`.
   `DEBUG=True`** (`config/urls.py`) : en production, c'est PythonAnywhere qui
   doit les servir via un mapping statique (étape 8), sinon les images
   uploadées via l'admin (ex. captures de projets) renverront une 404.
+- **`manage.py` bascule sur `config.settings.dev` si
+  `DJANGO_SETTINGS_MODULE` n'est pas exporté** (`os.environ.setdefault(...)`
+  dans `manage.py`) — pas sur `.env`, qui ne contient qu'une valeur `DEBUG`
+  lue *par* les settings, pas le nom du module lui-même. Or `dev.py` ajoute
+  `django_browser_reload` à `INSTALLED_APPS`, un paquet qui n'est **pas**
+  dans `requirements/prod.txt` : toute commande `manage.py` (migrate,
+  createsuperuser, collectstatic) lancée dans une console sans avoir exporté
+  `DJANGO_SETTINGS_MODULE=config.settings.prod` échoue avec
+  `ModuleNotFoundError: No module named 'django_browser_reload'`, ou pire,
+  s'exécute silencieusement avec `DEBUG=True` et sans la config Whitenoise
+  si le paquet est présent. Toujours exporter cette variable **avant**
+  toute commande `manage.py` sur le serveur (étape 3).
 
 ### Procédure
 
@@ -131,12 +143,16 @@ dans `theme/static_src/src/styles.css` et relancer `tailwind build`.
    # mkvirtualenv crée ET active le venv dans la foulée — le prompt affiche
    # un préfixe (django-portfolio-env) tant qu'il est actif dans cette console.
    pip install -r requirements/prod.txt
+   export DJANGO_SETTINGS_MODULE=config.settings.prod
+   # indispensable : sans cet export, manage.py retombe sur config.settings.dev
+   # (voir contraintes ci-dessus) et plante ou tourne avec les mauvais réglages.
    ```
-   Si vous rouvrez une nouvelle console Bash plus tard (le venv n'y est
-   **pas** actif automatiquement), réactivez-le avant toute commande
-   `manage.py` :
+   Si vous rouvrez une nouvelle console Bash plus tard, ni le venv ni cette
+   variable ne sont actifs automatiquement — réactivez les deux avant toute
+   commande `manage.py` :
    ```bash
    workon django-portfolio-env
+   export DJANGO_SETTINGS_MODULE=config.settings.prod
    ```
 
 4. **Configurer les variables d'environnement.** Créer un `.env` à la racine
@@ -219,6 +235,7 @@ cd django-portfolio
 # 3. Créer + activer le virtualenv, installer les dépendances de prod
 mkvirtualenv --python=python3.12 django-portfolio-env
 pip install -r requirements/prod.txt
+export DJANGO_SETTINGS_MODULE=config.settings.prod
 
 # 4. Variables d'environnement (adapter SECRET_KEY et <votre-compte>)
 cat > .env <<'EOF'
@@ -235,12 +252,13 @@ python manage.py createsuperuser
 python manage.py collectstatic --noinput
 ```
 
-Dans une console Bash rouverte plus tard, réactiver le venv avant toute
-commande `manage.py` :
+Dans une console Bash rouverte plus tard, réactiver le venv et l'export
+avant toute commande `manage.py` :
 
 ```bash
-workon django-portfolio-env
 cd django-portfolio
+workon django-portfolio-env
+export DJANGO_SETTINGS_MODULE=config.settings.prod
 ```
 
 ### Mettre à jour un déploiement existant
@@ -251,6 +269,7 @@ et activer le venv avant toute commande `manage.py` :
 ```bash
 cd ~/django-portfolio
 workon django-portfolio-env
+export DJANGO_SETTINGS_MODULE=config.settings.prod
 
 git pull
 pip install -r requirements/prod.txt   # si requirements/prod.txt a changé
