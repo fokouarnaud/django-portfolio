@@ -89,30 +89,128 @@ dans `theme/static_src/src/styles.css` et relancer `tailwind build`.
 
 ## Déploiement (PythonAnywhere, compte gratuit)
 
-Contraintes du compte gratuit PythonAnywhere à respecter :
+### Contraintes du compte gratuit à respecter
 
 - **Quota disque ~500 Mo** : ne jamais uploader `.venv/`, `node_modules/` ni
-  `staticfiles/` — tout est dans `.gitignore`. Recréer un venv Python
-  directement sur PythonAnywhere (`mkvirtualenv` + `pip install -r requirements/prod.txt`).
+  `staticfiles/` — tout est dans `.gitignore`. Le venv Python est recréé
+  directement sur PythonAnywhere (étape 3 ci-dessous).
 - **Pas de Node.js et accès réseau sortant limité (liste blanche)** : le build
-  Tailwind (`npm`/`postcss`) doit se faire **en local**, jamais sur le serveur.
-  C'est pourquoi `theme/static/css/dist/styles.css` est committé — le serveur
-  n'a qu'à servir ce fichier déjà compilé.
-- **`collectstatic` fonctionne normalement** sur PythonAnywhere (commande
-  Python pure) :
-  ```bash
-  DJANGO_SETTINGS_MODULE=config.settings.prod python manage.py collectstatic --noinput
-  ```
+  Tailwind (`npm`/`postcss`) doit se faire **en local**, jamais sur le
+  serveur. C'est pourquoi `theme/static/css/dist/styles.css` est committé —
+  le serveur n'a qu'à servir ce fichier déjà compilé (voir « Build Tailwind
+  pour la production » ci-dessus — à refaire et committer avant chaque
+  déploiement si des templates ont changé).
 - **PostgreSQL externe potentiellement bloqué** sur le plan gratuit (accès
-  réseau sortant restreint à une liste blanche). À vérifier avant la bascule
-  PostgreSQL ; alternative : la base MySQL fournie par PythonAnywhere, ou un
-  plan payant.
-- Variables d'environnement à définir sur PythonAnywhere (onglet *Web* →
-  fichier WSGI, ou un `.env` non committé) : `SECRET_KEY`, `DEBUG=False`,
-  `ALLOWED_HOSTS=<votre-sous-domaine>.pythonanywhere.com`, `DATABASE_URL`
-  si PostgreSQL/MySQL.
-- Le fichier WSGI généré par PythonAnywhere doit pointer vers
-  `config.settings.prod` (variable `DJANGO_SETTINGS_MODULE`).
+  réseau sortant restreint à une liste blanche). À vérifier avant toute
+  bascule PostgreSQL ; alternative : la base MySQL fournie par
+  PythonAnywhere, ou un plan payant. Par défaut (`DATABASE_URL` non défini),
+  le site tourne en SQLite — suffisant pour un portfolio à faible trafic.
+- **Les fichiers médias (`media/`) ne sont servis par Django qu'en
+  `DEBUG=True`** (`config/urls.py`) : en production, c'est PythonAnywhere qui
+  doit les servir via un mapping statique (étape 8), sinon les images
+  uploadées via l'admin (ex. captures de projets) renverront une 404.
+
+### Procédure
+
+1. **Créer le compte** sur [pythonanywhere.com](https://www.pythonanywhere.com)
+   (plan *Beginner* gratuit) — le site sera accessible sur
+   `<votre-compte>.pythonanywhere.com`.
+
+2. **Cloner le dépôt** depuis une console Bash PythonAnywhere (onglet
+   *Consoles* → *Bash*) :
+   ```bash
+   git clone https://github.com/fokouarnaud/django-portfolio.git
+   cd django-portfolio
+   ```
+
+3. **Créer le virtualenv et installer les dépendances de prod** (toujours
+   dans la console Bash — `mkvirtualenv` est fourni par
+   `virtualenvwrapper`, préinstallé sur PythonAnywhere) :
+   ```bash
+   mkvirtualenv --python=python3.12 django-portfolio-env
+   pip install -r requirements/prod.txt
+   ```
+
+4. **Configurer les variables d'environnement.** Créer un `.env` à la racine
+   du projet cloné (il reste sur le serveur, jamais committé — déjà dans
+   `.gitignore`) :
+   ```bash
+   cat > .env <<'EOF'
+   SECRET_KEY=<générer une valeur, voir "Démarrage local" ci-dessus>
+   DEBUG=False
+   ALLOWED_HOSTS=<votre-compte>.pythonanywhere.com
+   EOF
+   ```
+   Ajouter `DATABASE_URL=...` dans ce même fichier uniquement si vous basculez
+   vers PostgreSQL/MySQL (voir « Bascule SQLite → PostgreSQL » ci-dessus).
+
+5. **Appliquer les migrations et créer le superutilisateur** :
+   ```bash
+   python manage.py migrate
+   python manage.py createsuperuser
+   ```
+
+6. **Collecter les fichiers statiques** (commande Python pure, fonctionne
+   normalement sur le plan gratuit) :
+   ```bash
+   python manage.py collectstatic --noinput
+   ```
+
+7. **Créer l'application web** : onglet *Web* → *Add a new web app* →
+   choisir le domaine gratuit proposé → **Manual configuration** (pas
+   « Django », pour garder le contrôle du fichier WSGI) → sélectionner la
+   même version de Python qu'à l'étape 3 (3.12).
+   - Dans la section *Virtualenv*, renseigner le chemin du venv créé à
+     l'étape 3 (ex. `/home/<votre-compte>/.virtualenvs/django-portfolio-env`).
+   - Dans la section *Code*, renseigner *Source code*
+     (`/home/<votre-compte>/django-portfolio`) et *Working directory*
+     (idem).
+
+8. **Éditer le fichier WSGI** généré par PythonAnywhere (lien cliquable dans
+   l'onglet *Web*, section *Code*) : remplacer son contenu par un import du
+   `application` du projet, en pointant vers les settings de prod :
+   ```python
+   import os
+   import sys
+
+   path = "/home/<votre-compte>/django-portfolio"
+   if path not in sys.path:
+       sys.path.insert(0, path)
+
+   os.environ["DJANGO_SETTINGS_MODULE"] = "config.settings.prod"
+
+   from django.core.wsgi import get_wsgi_application
+   application = get_wsgi_application()
+   ```
+
+9. **Mapper les fichiers statiques et médias** (onglet *Web*, section
+   *Static files*), pour de meilleures performances et parce que les médias
+   ne sont pas servis par Django en prod (voir contraintes ci-dessus) :
+
+   | URL       | Directory                                        |
+   |-----------|---------------------------------------------------|
+   | `/static/` | `/home/<votre-compte>/django-portfolio/staticfiles` |
+   | `/media/`  | `/home/<votre-compte>/django-portfolio/media`       |
+
+10. **Recharger l'application** : bouton vert *Reload* en haut de l'onglet
+    *Web*. Le site est alors accessible sur
+    `https://<votre-compte>.pythonanywhere.com`.
+
+### Mettre à jour un déploiement existant
+
+Depuis une console Bash, dans le dossier du projet et avec le venv activé
+(`workon django-portfolio-env`) :
+
+```bash
+git pull
+pip install -r requirements/prod.txt   # si requirements/prod.txt a changé
+python manage.py migrate               # si de nouvelles migrations existent
+python manage.py collectstatic --noinput
+```
+
+Puis recharger l'application depuis l'onglet *Web* (bouton *Reload*) —
+indispensable après tout `git pull`, PythonAnywhere ne redémarre pas
+l'application tout seul.
 
 ## Structure
 
