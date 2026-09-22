@@ -1,0 +1,37 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/**
+  * A catch-all path to Django template files, JavaScript, and Python files
+  * that contain Tailwind CSS classes and will be scanned by Tailwind to generate the final CSS file.
+  */
+@source "../../../**/*.{html,py,js}";
+
+/* Palette éditoriale minimaliste (Swiss Modernism) — cf. ui-ux-pro-max design-system */
+@theme {
+  --color-ink: #18181b;
+  --color-ink-muted: #3f3f46;
+  --color-paper: #fafafa;
+  --color-card: #ffffff;
+  --color-muted: #e8ecf0;
+  --color-muted-foreground: #475569;
+  --color-border: #e4e4e7;
+  --color-accent: #ec4899;
+
+  --font-display: "Libre Bodoni", ui-serif, Georgia, serif;
+  --font-body: "Public Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-paper text-ink font-body antialiased;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display;
+  }
+
+  a {
+    @apply transition-colors duration-200;
+  }
+}

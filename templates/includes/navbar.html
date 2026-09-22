@@ -1,0 +1,11 @@
+<header class="border-b border-border">
+    <div class="max-w-3xl mx-auto px-4 py-6 flex items-center justify-between">
+        <a href="{% url 'core:home' %}" class="font-display text-xl font-semibold tracking-tight text-ink">
+            Portfolio
+        </a>
+        <nav class="flex items-center gap-6 text-sm font-medium">
+            <a href="{% url 'projects:project_list' %}" class="text-ink-muted hover:text-ink">Projets</a>
+            <a href="{% url 'core:about' %}" class="text-ink-muted hover:text-ink">À propos</a>
+        </nav>
+    </div>
+</header>

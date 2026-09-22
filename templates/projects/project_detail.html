@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load markdown_extras %}
+
+{% block title %}{{ project.title }} — Portfolio{% endblock %}
+
+{% block content %}
+<a href="{% url 'projects:project_list' %}" class="text-sm text-muted-foreground hover:text-ink">&larr; Tous les projets</a>
+
+<article class="mt-6">
+    <img src="{{ project.cover_image.url }}" alt="" class="w-full h-64 object-cover rounded-lg mb-8">
+
+    <h1 class="font-display text-3xl font-semibold mb-2">{{ project.title }}</h1>
+
+    <div class="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-6">
+        {% if project.published_at %}
+        <time datetime="{{ project.published_at|date:'c' }}">{{ project.published_at|date:"d F Y" }}</time>
+        {% endif %}
+        {% if project.external_link %}
+        <span aria-hidden="true">·</span>
+        <a href="{{ project.external_link }}" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline">
+            Voir le projet &rarr;
+        </a>
+        {% endif %}
+    </div>
+
+    {% if project.tags.all %}
+    <div class="flex flex-wrap gap-1.5 mb-8">
+        {% for tag in project.tags.all %}
+        <a href="{% url 'projects:project_list' %}?tag={{ tag.slug }}"
+           class="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground hover:text-ink">
+            {{ tag.name }}
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="prose prose-neutral max-w-none">
+        {{ project.long_description|markdownify }}
+    </div>
+</article>
+{% endblock %}

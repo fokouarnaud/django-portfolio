@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Portfolio{% endblock %}
+
+{% block content %}
+<section class="mb-16">
+    <h1 class="font-display text-4xl font-semibold mb-4">Bonjour</h1>
+    <p class="text-muted-foreground max-w-xl">
+        Je conçois et je construis des projets. Retrouvez une sélection ci-dessous,
+        ou parcourez <a href="{% url 'projects:project_list' %}" class="text-accent hover:underline">tous les projets</a>.
+    </p>
+</section>
+
+{% if projects %}
+<section>
+    <h2 class="font-display text-xl font-semibold mb-6">Projets récents</h2>
+    <div class="grid sm:grid-cols-3 gap-6">
+        {% for project in projects %}
+        <a href="{{ project.get_absolute_url }}" class="block border border-border rounded-lg overflow-hidden bg-card">
+            <img src="{{ project.cover_image.url }}" alt="" class="w-full h-32 object-cover">
+            <div class="p-4">
+                <h3 class="font-display font-semibold text-sm">{{ project.title }}</h3>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+{% endblock %}

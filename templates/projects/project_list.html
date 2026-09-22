@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Projets — Portfolio{% endblock %}
+
+{% block content %}
+<h1 class="font-display text-3xl font-semibold mb-2">Projets</h1>
+<p class="text-muted-foreground mb-8">
+    {{ page_obj.paginator.count }} projet{{ page_obj.paginator.count|pluralize }}
+    {% if filter.form.cleaned_data.tag %}avec le tag « {{ filter.form.cleaned_data.tag }} »{% endif %}
+</p>
+
+<form method="get" class="mb-6" role="search">
+    <label for="q" class="sr-only">Rechercher un projet</label>
+    <input
+        type="search" id="q" name="q" value="{{ request.GET.q }}"
+        placeholder="Rechercher un projet…"
+        class="w-full min-h-11 px-4 py-2 border border-border rounded-md bg-card text-ink placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ink"
+    >
+</form>
+
+{% if available_tags %}
+<div class="flex flex-wrap gap-2 mb-4">
+    <a href="{% querystring tag=None page=1 %}"
+       class="text-xs px-3 py-1.5 rounded-full border {% if not request.GET.tag %}bg-ink text-white border-ink{% else %}border-border text-ink-muted hover:text-ink{% endif %}">
+        Tous
+    </a>
+    {% for tag in available_tags %}
+    <a href="{% querystring tag=tag.slug page=1 %}"
+       class="text-xs px-3 py-1.5 rounded-full border {% if request.GET.tag == tag.slug %}bg-ink text-white border-ink{% else %}border-border text-ink-muted hover:text-ink{% endif %}">
+        {{ tag.name }}
+    </a>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if available_years %}
+<div class="flex flex-wrap gap-3 mb-10 text-sm">
+    {% for date in available_years %}
+    <a href="{% querystring year=date.year page=1 %}"
+       class="{% if request.GET.year == date.year|stringformat:'s' %}text-ink font-semibold underline{% else %}text-muted-foreground hover:text-ink{% endif %}">
+        {{ date.year }}
+    </a>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if projects %}
+<div class="grid sm:grid-cols-2 gap-8">
+    {% for project in projects %}
+    <article class="border border-border rounded-lg overflow-hidden bg-card flex flex-col">
+        <a href="{{ project.get_absolute_url }}" class="block">
+            <img src="{{ project.cover_image.url }}" alt="" class="w-full h-40 object-cover">
+        </a>
+        <div class="p-5 flex-1 flex flex-col">
+            <h2 class="font-display text-lg font-semibold mb-1">
+                <a href="{{ project.get_absolute_url }}" class="hover:text-accent">{{ project.title }}</a>
+            </h2>
+            <p class="text-sm text-muted-foreground mb-3 flex-1">{{ project.short_description }}</p>
+            {% if project.tags.all %}
+            <div class="flex flex-wrap gap-1.5">
+                {% for tag in project.tags.all %}
+                <a href="{% querystring tag=tag.slug page=1 %}"
+                   class="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground hover:text-ink">
+                    {{ tag.name }}
+                </a>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </article>
+    {% endfor %}
+</div>
+{% else %}
+<p class="text-muted-foreground">Aucun projet ne correspond à cette recherche.</p>
+{% endif %}
+
+{% include "includes/pagination.html" %}
+{% endblock %}
