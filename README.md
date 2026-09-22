@@ -245,10 +245,13 @@ cd django-portfolio
 
 ### Mettre à jour un déploiement existant
 
-Depuis une console Bash, dans le dossier du projet et avec le venv activé
-(`workon django-portfolio-env`) :
+Depuis une console Bash PythonAnywhere, se positionner à la racine du projet
+et activer le venv avant toute commande `manage.py` :
 
 ```bash
+cd ~/django-portfolio
+workon django-portfolio-env
+
 git pull
 pip install -r requirements/prod.txt   # si requirements/prod.txt a changé
 python manage.py migrate               # si de nouvelles migrations existent
