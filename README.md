@@ -123,12 +123,20 @@ dans `theme/static_src/src/styles.css` et relancer `tailwind build`.
    cd django-portfolio
    ```
 
-3. **Créer le virtualenv et installer les dépendances de prod** (toujours
-   dans la console Bash — `mkvirtualenv` est fourni par
-   `virtualenvwrapper`, préinstallé sur PythonAnywhere) :
+3. **Créer et activer le virtualenv, puis installer les dépendances de
+   prod** (`mkvirtualenv` est fourni par `virtualenvwrapper`, préinstallé
+   sur PythonAnywhere) :
    ```bash
    mkvirtualenv --python=python3.12 django-portfolio-env
+   # mkvirtualenv crée ET active le venv dans la foulée — le prompt affiche
+   # un préfixe (django-portfolio-env) tant qu'il est actif dans cette console.
    pip install -r requirements/prod.txt
+   ```
+   Si vous rouvrez une nouvelle console Bash plus tard (le venv n'y est
+   **pas** actif automatiquement), réactivez-le avant toute commande
+   `manage.py` :
+   ```bash
+   workon django-portfolio-env
    ```
 
 4. **Configurer les variables d'environnement.** Créer un `.env` à la racine
