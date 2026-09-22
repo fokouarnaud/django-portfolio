@@ -67,6 +67,26 @@ python manage.py tailwind build
 git add theme/static/css/dist
 ```
 
+## Réglages du site (admin)
+
+`/admin/core/sitesettings/1/change/` (une seule instance, singleton) permet de
+gérer, sans toucher au code :
+
+- **Apparence** : police (`editorial` / `modern` / `classic`) et thème
+  (`clair` / `sombre`) appliqués à tout le site. Les variantes sont déjà
+  compilées dans `theme/static/css/dist/styles.css` (via des sélecteurs
+  `:root[data-font=...]` / `:root[data-theme=...]`) — changer la valeur en
+  admin n'exige donc **aucun rebuild Tailwind**.
+- **Contact & réseaux** : numéro WhatsApp (lien `wa.me` généré
+  automatiquement), lien YouTube, lien Facebook, lien vers la démo produit —
+  affichés en pied de page uniquement s'ils sont renseignés.
+- **Vidéo de présentation** : URL YouTube (`watch`, `youtu.be` ou `embed`,
+  peu importe le format) intégrée sur la page d'accueil.
+
+Pour ajouter une nouvelle police/thème, éditer `_GOOGLE_FONTS_URLS` et les
+`choices` dans `apps/core/models.py`, puis ajouter le bloc CSS correspondant
+dans `theme/static_src/src/styles.css` et relancer `tailwind build`.
+
 ## Déploiement (PythonAnywhere, compte gratuit)
 
 Contraintes du compte gratuit PythonAnywhere à respecter :
