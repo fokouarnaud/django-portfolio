@@ -45,3 +45,8 @@ class Project(models.Model):
 
     def get_absolute_url(self):
         return reverse("projects:project_detail", kwargs={"slug": self.slug})
+
+    def save(self, *args, **kwargs):
+        if self.status == self.Status.PUBLISHED and self.published_at is None:
+            self.published_at = timezone.now()
+        super().save(*args, **kwargs)

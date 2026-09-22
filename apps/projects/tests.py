@@ -55,6 +55,27 @@ class ProjectModelTests(TestCase):
 
         self.assertEqual(list(Project.published.all()), [])
 
+    def test_saving_as_published_without_date_sets_published_at_to_now(self):
+        project = make_project(
+            slug="auto-date-project", status=Project.Status.PUBLISHED, published_at=None
+        )
+
+        self.assertIsNotNone(project.published_at)
+        self.assertLessEqual(project.published_at, timezone.now())
+
+    def test_saving_as_draft_does_not_set_published_at(self):
+        project = make_project(
+            slug="draft-project", status=Project.Status.DRAFT, published_at=None
+        )
+
+        self.assertIsNone(project.published_at)
+
+    def test_saving_as_published_keeps_explicit_published_at(self):
+        explicit_date = timezone.now() - timezone.timedelta(days=10)
+        project = make_project(slug="explicit-date-project", published_at=explicit_date)
+
+        self.assertEqual(project.published_at, explicit_date)
+
 
 class ProjectFilterTests(TestCase):
     def setUp(self):
@@ -102,6 +123,33 @@ class TagListFilterTests(TestCase):
 
         result = list_filter.queryset(None, Project.objects.all())
         self.assertEqual(list(result), [tagged])
+
+
+class ProjectAdminFormTests(TestCase):
+    def setUp(self):
+        self.admin_instance = ProjectAdmin(Project, AdminSite())
+
+    def test_cover_thumbnail_renders_image_tag_when_image_present(self):
+        project = make_project(slug="with-cover")
+
+        html = self.admin_instance.cover_thumbnail(project)
+
+        self.assertIn("<img", html)
+        self.assertIn(project.cover_image.url, html)
+
+    def test_cover_thumbnail_shows_placeholder_without_pk(self):
+        unsaved_project = Project(title="Not saved yet")
+
+        html = self.admin_instance.cover_thumbnail(unsaved_project)
+
+        self.assertNotIn("<img", html)
+
+    def test_short_description_widget_has_maxlength_attribute(self):
+        form = self.admin_instance.get_form(request=None)()
+
+        widget_attrs = form.fields["short_description"].widget.attrs
+
+        self.assertEqual(widget_attrs.get("maxlength"), "300")
 
 
 class ProjectViewTests(TestCase):

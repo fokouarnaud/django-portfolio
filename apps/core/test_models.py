@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.test import TestCase
 
 from .models import SiteSettings
@@ -43,6 +44,24 @@ class SiteSettingsWhatsappLinkTests(TestCase):
         settings_obj = SiteSettings(whatsapp_number="")
         self.assertEqual(settings_obj.whatsapp_link, "")
 
+    def test_rejects_non_numeric_whatsapp_number(self):
+        settings_obj = SiteSettings(whatsapp_number="not-a-number")
+        with self.assertRaises(ValidationError):
+            settings_obj.full_clean()
+
+    def test_rejects_too_short_whatsapp_number(self):
+        settings_obj = SiteSettings(whatsapp_number="+123")
+        with self.assertRaises(ValidationError):
+            settings_obj.full_clean()
+
+    def test_accepts_valid_international_whatsapp_number(self):
+        settings_obj = SiteSettings(whatsapp_number="+33 6 12 34 56 78")
+        settings_obj.full_clean()
+
+    def test_blank_whatsapp_number_is_valid(self):
+        settings_obj = SiteSettings(whatsapp_number="")
+        settings_obj.full_clean()
+
 
 class SiteSettingsYoutubeEmbedTests(TestCase):
     def test_embed_url_derived_from_presentation_video_url(self):
@@ -75,3 +94,10 @@ class SiteSettingsFontThemeTests(TestCase):
         self.assertIn("Inter", editorial.google_fonts_url)
         self.assertIn("Playfair", classic.google_fonts_url)
         self.assertNotEqual(editorial.google_fonts_url, classic.google_fonts_url)
+
+    def test_font_preview_family_matches_font_theme(self):
+        modern = SiteSettings(font_theme=SiteSettings.FontTheme.MODERN)
+        classic = SiteSettings(font_theme=SiteSettings.FontTheme.CLASSIC)
+
+        self.assertIn("Inter", modern.font_preview_family)
+        self.assertIn("Playfair Display", classic.font_preview_family)

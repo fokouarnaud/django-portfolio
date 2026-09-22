@@ -31,6 +31,28 @@ class SiteSettingsAdminTests(TestCase):
             reverse("admin:core_sitesettings_change", args=[settings_obj.pk]),
         )
 
+    def test_change_form_shows_color_preview_matching_theme(self):
+        settings_obj = SiteSettings.get_solo()
+        settings_obj.color_theme = SiteSettings.ColorTheme.DARK
+        settings_obj.save()
+        change_url = reverse("admin:core_sitesettings_change", args=[settings_obj.pk])
+
+        response = self.client.get(change_url)
+
+        self.assertContains(response, "#0b0b0d")
+
+    def test_change_form_shows_font_preview_matching_theme(self):
+        settings_obj = SiteSettings.get_solo()
+        settings_obj.font_theme = SiteSettings.FontTheme.CLASSIC
+        settings_obj.save()
+        change_url = reverse("admin:core_sitesettings_change", args=[settings_obj.pk])
+
+        response = self.client.get(change_url)
+
+        self.assertRegex(
+            response.content.decode(), r'font-family:[^"]*Playfair Display'
+        )
+
     def test_delete_permission_is_always_denied(self):
         settings_obj = SiteSettings.get_solo()
         delete_url = reverse(

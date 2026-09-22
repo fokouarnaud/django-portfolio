@@ -1,5 +1,6 @@
 import re
 
+from django.core.validators import RegexValidator
 from django.db import models
 
 from .utils import youtube_embed_url
@@ -20,6 +21,25 @@ _GOOGLE_FONTS_URLS = {
         "&family=Source+Sans+3:wght@300;400;500;600;700&display=swap"
     ),
 }
+
+_FONT_PREVIEW_FAMILIES = {
+    "editorial": "'Libre Bodoni', Georgia, serif",
+    "modern": "'Inter', sans-serif",
+    "classic": "'Playfair Display', Georgia, serif",
+}
+
+_COLOR_PREVIEW_SWATCHES = {
+    "light": {"background": "#fafafa", "foreground": "#18181b"},
+    "dark": {"background": "#0b0b0d", "foreground": "#fafafa"},
+}
+
+whatsapp_number_validator = RegexValidator(
+    regex=r"^\+?[\d\s]{8,20}$",
+    message=(
+        "Numéro invalide. Utilisez un format international, "
+        "ex : +33612345678 (8 à 15 chiffres, espaces autorisés)."
+    ),
+)
 
 
 class SiteSettings(models.Model):
@@ -43,6 +63,7 @@ class SiteSettings(models.Model):
 
     whatsapp_number = models.CharField(
         max_length=20, blank=True,
+        validators=[whatsapp_number_validator],
         help_text="Format international, ex : +33612345678",
     )
     youtube_url = models.URLField(blank=True, help_text="Lien vers la chaîne YouTube.")
@@ -75,6 +96,14 @@ class SiteSettings(models.Model):
     @property
     def google_fonts_url(self):
         return _GOOGLE_FONTS_URLS.get(self.font_theme, "")
+
+    @property
+    def font_preview_family(self):
+        return _FONT_PREVIEW_FAMILIES.get(self.font_theme, "inherit")
+
+    @property
+    def color_preview_swatch(self):
+        return _COLOR_PREVIEW_SWATCHES.get(self.color_theme, _COLOR_PREVIEW_SWATCHES["light"])
 
     @property
     def whatsapp_link(self):
