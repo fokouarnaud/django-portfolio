@@ -1,0 +1,8 @@
+# Système de révision local (Quiz Flask + Base SQLite cachée)
+.revision/
+
+#claude md
+.CLAUDE.md
+.agents
+skills-lock.json
+CLAUDE.md
